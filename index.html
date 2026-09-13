@@ -1,0 +1,691 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, interactive-widget=resizes-content">
+  <!-- Tells the WebView this page fully manages its own light/dark
+       theming (see the data-theme system in style.css) — without this,
+       Android's algorithmic "force dark" mode auto-inverts backgrounds
+       but leaves literal shadow colors alone, producing a white glow
+       artifact around every neumorphic shadow on top of the inverted
+       black background. -->
+  <meta name="color-scheme" content="light dark">
+
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <script src="https://kit.fontawesome.com/ec00aeca70.js" crossorigin="anonymous"></script>
+  <!-- Firebase compat SDK — loaded as global <script> tags (not ES6 modules),
+       since modular import/export fails silently inside the Phoenix/Acode WebView. -->
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.13.2/firebase-firestore-compat.js"></script>
+  <title>SONIQ</title>
+  <link rel="stylesheet" href="style.css" type="text/css" media="all" />
+  <link rel="preconnect" href="https://googleapis.com">
+  <link rel="preconnect" href="https://gstatic.com" crossorigin>
+  <link href="https://googleapis.com/css2?family=Revalia&display=swap" rel="stylesheet">
+  <link href="https://fonts.cdnfonts.com/css/medusa-gothic" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Andika:wght@400;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://sets.hugeicons.com/YOUR-SET-ID.css" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://use.hugeicons.com/font/icons.css">
+</head>
+<body>
+
+  <!-- ===== ONBOARDING OVERLAY ===== 
+       Full-screen, shown once (soniq_onboarding_complete flag in
+       localStorage). Three steps: name -> genre picks -> let's start.
+       Deliberately uses its own "onboard-*" classes throughout instead
+       of reusing "genre-chip" / "pill" etc., so it never gets swept up
+       in the Account screen's querySelectorAll('.genre-chip') loops or
+       any other existing class-based wiring. -->
+  <div id="onboarding-overlay" class="onboarding-overlay">
+
+    <div class="onboard-step active" id="onboard-step-1" data-step="1">
+      <div class="onboard-bg" style="background-image:url('https://images.unsplash.com/photo-1761005654142-819960af0658?auto=format&fit=crop&w=1200&q=80')"></div>
+      <!-- Photo: Mustafi Numann, via Unsplash (unsplash.com/photos/KeI2g1r_R3s) -->
+      <div class="onboard-scrim"></div>
+      <div class="onboard-content">
+        <span class="onboard-eyebrow">Welcome to SONIQ</span>
+        <h2 class="onboard-heading">What should we call you?</h2>
+        <div class="search-bar onboard-input-wrap">
+          <input type="text" id="onboard-name-input" class="search-input" placeholder="Your name" maxlength="30" autocomplete="off">
+        </div>
+        <button class="onboard-btn" id="onboard-step1-continue" type="button">Continue</button>
+      </div>
+    </div>
+
+    <div class="onboard-step" id="onboard-step-2" data-step="2">
+      <div class="onboard-bg" style="background-image:url('https://images.unsplash.com/photo-1488841714725-bb4c32d1ac94?auto=format&fit=crop&w=1200&q=80')"></div>
+      <!-- Photo: Clem Onojeghuo, via Unsplash (unsplash.com/photos/pTeZKi29EYE) -->
+      <div class="onboard-scrim"></div>
+      <div class="onboard-content">
+        <span class="onboard-eyebrow">What do you love?</span>
+        <h2 class="onboard-heading">Pick a few genres</h2>
+        <p class="onboard-subtext">We'll surface more of what you like in your Library.</p>
+        <div class="onboard-genre-grid" id="onboard-genre-grid">
+          <button class="onboard-genre-chip" data-genre="Afrobeats" type="button">Afrobeats</button>
+          <button class="onboard-genre-chip" data-genre="Amapiano" type="button">Amapiano</button>
+          <button class="onboard-genre-chip" data-genre="Afro-fusion" type="button">Afro-fusion</button>
+          <button class="onboard-genre-chip" data-genre="Highlife" type="button">Highlife</button>
+          <button class="onboard-genre-chip" data-genre="Hip-Hop" type="button">Hip-Hop</button>
+          <button class="onboard-genre-chip" data-genre="R&amp;B" type="button">R&amp;B</button>
+          <button class="onboard-genre-chip" data-genre="Pop" type="button">Pop</button>
+          <button class="onboard-genre-chip" data-genre="Electronic" type="button">Electronic</button>
+          <button class="onboard-genre-chip" data-genre="Gospel" type="button">Gospel</button>
+        </div>
+        <button class="onboard-btn" id="onboard-step2-continue" type="button">Continue</button>
+      </div>
+    </div>
+
+    <div class="onboard-step" id="onboard-step-3" data-step="3">
+      <div class="onboard-bg" style="background-image:url('https://images.unsplash.com/photo-1767289394567-b5e4b5986c88?auto=format&fit=crop&w=1200&q=80')"></div>
+      <!-- Photo: David Magalhaes, via Unsplash (unsplash.com/photos/hunYJNQZAio) -->
+      <div class="onboard-scrim"></div>
+      <div class="onboard-content">
+        <span class="onboard-eyebrow" id="onboard-step3-eyebrow">You're all set</span>
+        <h2 class="onboard-heading" id="onboard-step3-heading">Let's go</h2>
+        <p class="onboard-subtext">Your library, your sound, your genres — all in one place.</p>
+        <button class="onboard-btn" id="onboard-step3-finish" type="button">Let's start</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ===== HOME SCREEN ===== -->
+  <div id="screen-home" class="screen active">
+    <header class="head">
+      <!-- Left Section: Icon stacked above text -->
+      <div class="user-info">
+        <div class="home-avatar-wrap">
+          <i class="far fa-circle-user account-icon" id="home-avatar-icon"></i>
+          <img class="home-avatar-img" id="home-avatar-img" alt="Profile picture" style="display:none;">
+        </div>
+        <h2 class="greeting" id="home-greeting">Hi User</h2>
+      </div>
+
+      <!-- Right Section: Icons aligned in a straight line -->
+      <div class="actions">
+        <i class="fas fa-search" id="open-search-header"></i>
+        <i class="far fa-heart"></i>
+      </div>
+    </header>
+
+    <main class="home">
+      <!-- Filter Pills -->
+      <div class="pill-row">
+        <button class="pill active">All</button>
+        <button class="pill">New Release</button>
+        <button class="pill">Trending</button>
+        <button class="pill">Top Charts</button>
+      </div>
+
+      <!-- Curated & Trending -->
+      <section class="curated">
+        <h3 class="section-title">Curated <span style="font-family:'Andika';font-size:24px;">&amp;</span> trending</h3>
+
+        <div class="card-row">
+          <div class="feature-card">
+            <!-- Photo: Sado Lavren, via Pexels (pexels.com/photo/18456149) -->
+            <div class="card-bg" style="background-image:url('https://images.pexels.com/photos/18456149/pexels-photo-18456149.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800')"></div>
+            <div class="blur-1"></div>
+            <div class="blur-2"></div>
+            <div class="blur-3"></div>
+            <div class="blur-4"></div>
+            <div class="blur-5"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+              <h4>Discover weekly</h4>
+              <p>The original slow instrumental best playlists.</p>
+              <div class="card-actions">
+                <button class="play-btn"><i class="fas fa-play"></i></button>
+                <i class="far fa-heart card-heart"></i>
+                <i class="fas fa-arrow-down card-download"></i>
+              </div>
+            </div>
+          </div>
+
+          <div class="feature-card">
+            <!-- Photo: Alex M, via Pexels (pexels.com/photo/38918479) -->
+            <div class="card-bg" style="background-image:url('https://images.pexels.com/photos/38918479/pexels-photo-38918479.png?auto=compress&cs=tinysrgb&fit=crop&h=1200&w=800')"></div>
+            <div class="blur-1"></div>
+            <div class="blur-2"></div>
+            <div class="blur-3"></div>
+            <div class="blur-4"></div>
+            <div class="blur-5"></div>
+            <div class="card-overlay"></div>
+            <div class="card-content">
+              <h4>Late night focus</h4>
+              <p>Low-tempo tracks to keep you in the zone.</p>
+              <div class="card-actions">
+                <button class="play-btn"><i class="fas fa-play"></i></button>
+                <i class="far fa-heart card-heart"></i>
+                <i class="fas fa-arrow-down card-download"></i>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- Top Daily Playlists -->
+      <section class="daily">
+        <div class="section-header">
+          <h3 class="section-title">Top daily playlists</h3>
+          <span class="see-all">See all</span>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===== SEARCH SCREEN ===== -->
+  <div id="screen-search" class="screen search-screen">
+    <div class="search-top">
+      <button id="search-back" class="search-back" aria-label="Back">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <div class="search-bar">
+        <i class="fas fa-search search-bar-icon"></i>
+        <input type="text" id="search-input" class="search-input" placeholder="Songs, artists, playlists..." autocomplete="off">
+        <i class="fas fa-circle-xmark search-clear" id="search-clear"></i>
+      </div>
+    </div>
+
+    <div id="search-default" class="search-default">
+      <div class="search-block" id="recent-block">
+        <div class="search-block-header">
+          <h4>Recent searches</h4>
+          <span id="clear-recent" class="clear-link">Clear all</span>
+        </div>
+        <div id="recent-chips" class="chip-row"></div>
+      </div>
+
+      <div class="search-block">
+        <div class="search-block-header">
+          <h4>Trending now</h4>
+        </div>
+        <div id="trending-chips" class="chip-row"></div>
+      </div>
+    </div>
+
+    <div id="search-results" class="search-results hidden"></div>
+  </div>
+
+  <!-- ===== LIBRARY SCREEN ===== -->
+  <div id="screen-library" class="screen">
+    <header class="head">
+      <h2 class="page-title">Library</h2>
+    </header>
+
+    <main class="library">
+      <div class="library-cards" id="library-cards">
+        <div class="lib-card" data-index="0" data-genre="Electronic">
+          <div class="lib-thumb" style="background-image:url('https://images.pexels.com/photos/9401734/pexels-photo-9401734.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=200&w=200')"></div>
+          <div class="lib-info">
+            <p class="lib-title">Midnight Echoes</p>
+            <p class="lib-artist">Nova Ray</p>
+          </div>
+          <div class="lib-actions">
+            <button class="lib-play"><i class="fas fa-play"></i></button>
+            <i class="far fa-heart lib-heart"></i>
+            <i class="fas fa-check lib-check"></i>
+          </div>
+        </div>
+
+        <div class="lib-card" data-index="1" data-genre="Afrobeats">
+          <div class="lib-thumb" style="background-image:url('https://images.pexels.com/photos/12858796/pexels-photo-12858796.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=200&w=200')"></div>
+          <div class="lib-info">
+            <p class="lib-title">Solar Drift</p>
+            <p class="lib-artist">Kalene</p>
+          </div>
+          <div class="lib-actions">
+            <button class="lib-play"><i class="fas fa-play"></i></button>
+            <i class="far fa-heart lib-heart"></i>
+            <i class="fas fa-check lib-check"></i>
+          </div>
+        </div>
+
+        <div class="lib-card" data-index="2" data-genre="R&amp;B">
+          <div class="lib-thumb" style="background-image:url('https://images.pexels.com/photos/20131950/pexels-photo-20131950.jpeg?auto=compress&cs=tinysrgb&fit=crop&h=200&w=200')"></div>
+          <div class="lib-info">
+            <p class="lib-title">Glass Horizon</p>
+            <p class="lib-artist">Reyes &amp; Wolfe</p>
+          </div>
+          <div class="lib-actions">
+            <button class="lib-play"><i class="fas fa-play"></i></button>
+            <i class="far fa-heart lib-heart"></i>
+            <i class="fas fa-check lib-check"></i>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== ACCOUNT SCREEN ===== -->
+  <div id="screen-account" class="screen">
+    <header class="head">
+      <h2 class="page-title">Account</h2>
+    </header>
+
+    <main class="account">
+      <div class="account-profile">
+        <div class="account-avatar-wrap">
+          <i class="far fa-circle-user account-avatar-icon" id="account-avatar-icon"></i>
+          <img class="account-avatar-img" id="account-avatar-img" alt="Profile picture" style="display:none;">
+          <button class="avatar-edit-btn" id="avatar-edit-btn" type="button" aria-label="Change profile picture">
+            <i class="fas fa-camera"></i>
+          </button>
+        </div>
+        <p class="avatar-upload-status hidden" id="avatar-upload-status"></p>
+
+        <div class="account-name-display-row" id="account-name-display-row">
+          <p class="account-name" id="account-name-display">User</p>
+          <button class="name-edit-btn" id="name-edit-btn" type="button" aria-label="Edit name">
+            <i class="fas fa-pen"></i>
+          </button>
+        </div>
+
+        <div class="account-name-edit-row" id="account-name-edit-row">
+          <div class="search-bar">
+            <input type="text" class="search-input" id="account-name-input" maxlength="30" placeholder="Your name">
+          </div>
+          <button class="name-save-btn" id="name-save-btn" type="button" aria-label="Save name">
+            <i class="fas fa-check"></i>
+          </button>
+        </div>
+      </div>
+
+      <input type="file" accept="image/*" id="avatar-file-input" style="display:none;">
+
+      <section class="settings-section" id="account-sync-section">
+        <h3 class="settings-heading">Account &amp; Sync</h3>
+
+        <div class="setting-row" id="account-signed-out-row">
+          <div class="toggle-row">
+            <div class="setting-header-text">
+              <span class="setting-label">Not signed in</span>
+              <span class="setting-value">Sign in to back up your profile and preferences</span>
+            </div>
+            <button class="name-save-btn" id="account-sign-in-btn" type="button" aria-label="Sign in or create account">
+              <i class="fas fa-arrow-right-to-bracket"></i>
+            </button>
+          </div>
+        </div>
+
+        <div class="setting-row hidden" id="account-signed-in-row">
+          <div class="toggle-row">
+            <div class="setting-header-text">
+              <span class="setting-label">Signed in</span>
+              <span class="setting-value" id="account-signed-in-email">&nbsp;</span>
+            </div>
+            <button class="name-save-btn" id="account-sign-out-btn" type="button" aria-label="Sign out">
+              <i class="fas fa-arrow-right-from-bracket"></i>
+            </button>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3 class="settings-heading">Settings</h3>
+
+        <div class="setting-row" id="theme-setting">
+          <button class="setting-header" id="theme-dropdown-toggle" type="button" aria-expanded="false">
+            <div class="setting-header-text">
+              <span class="setting-label">App Theme</span>
+              <span class="setting-value" id="theme-current-value">Soft Neumorphic Light</span>
+            </div>
+            <i class="fas fa-chevron-down setting-chevron"></i>
+          </button>
+
+          <div class="theme-options" id="theme-options">
+            <div class="theme-option-row">
+              <span class="theme-option-label">Soft Neumorphic Light</span>
+              <input type="checkbox" class="theme-toggle" data-theme="light" checked>
+            </div>
+            <div class="theme-option-row">
+              <span class="theme-option-label">OLED Dark</span>
+              <input type="checkbox" class="theme-toggle" data-theme="oled-dark">
+            </div>
+            <div class="theme-option-row">
+              <span class="theme-option-label">SONIQ Orange</span>
+              <input type="checkbox" class="theme-toggle" data-theme="soniq-orange">
+            </div>
+            <div class="theme-option-row">
+              <span class="theme-option-label">High Contrast</span>
+              <input type="checkbox" class="theme-toggle" data-theme="high-contrast">
+            </div>
+          </div>
+        </div>
+
+        <div class="setting-row" id="genre-setting">
+          <button class="setting-header" id="genre-dropdown-toggle" type="button" aria-expanded="false">
+            <div class="setting-header-text">
+              <span class="setting-label">Music Preference</span>
+              <span class="setting-value" id="genre-current-value">Not set</span>
+            </div>
+            <i class="fas fa-chevron-down setting-chevron"></i>
+          </button>
+
+          <div class="accordion-body" id="genre-options">
+            <div class="genre-chip-grid">
+              <button class="pill genre-chip" data-genre="Afrobeats" type="button">Afrobeats</button>
+              <button class="pill genre-chip" data-genre="Amapiano" type="button">Amapiano</button>
+              <button class="pill genre-chip" data-genre="Afro-fusion" type="button">Afro-fusion</button>
+              <button class="pill genre-chip" data-genre="Highlife" type="button">Highlife</button>
+              <button class="pill genre-chip" data-genre="Hip-Hop" type="button">Hip-Hop</button>
+              <button class="pill genre-chip" data-genre="R&amp;B" type="button">R&amp;B</button>
+              <button class="pill genre-chip" data-genre="Pop" type="button">Pop</button>
+              <button class="pill genre-chip" data-genre="Electronic" type="button">Electronic</button>
+              <button class="pill genre-chip" data-genre="Gospel" type="button">Gospel</button>
+            </div>
+            <p class="note-text">Tracks matching your picks are surfaced first in your Library.</p>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3 class="settings-heading">Playback</h3>
+
+        <div class="setting-row" id="crossfade-setting">
+          <button class="setting-header" id="crossfade-dropdown-toggle" type="button" aria-expanded="false">
+            <div class="setting-header-text">
+              <span class="setting-label">Crossfade</span>
+              <span class="setting-value" id="crossfade-current-value">Off</span>
+            </div>
+            <i class="fas fa-chevron-down setting-chevron"></i>
+          </button>
+
+          <div class="accordion-body" id="crossfade-options">
+            <div class="pref-row">
+              <span class="pref-row-label">Enable Crossfade</span>
+              <input type="checkbox" class="pref-toggle" id="pref-crossfade-enabled">
+            </div>
+            <div class="slider-row pref-row" id="crossfade-duration-row">
+              <span class="eq-band-label">Duration</span>
+              <input type="range" class="eq-slider" id="crossfade-duration-slider" min="1" max="8" value="3" step="1">
+              <span class="eq-band-value" id="crossfade-duration-value">3s</span>
+            </div>
+            <p class="note-text">Only affects transitions between imported tracks while one is playing — demo tracks are simulated and have no real audio to fade.</p>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="toggle-row">
+            <div class="setting-header-text">
+              <span class="setting-label">Normalize Volume</span>
+              <span class="setting-value">Keeps loud and quiet imports closer in level</span>
+            </div>
+            <input type="checkbox" class="pref-toggle" id="pref-normalize-volume">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="toggle-row">
+            <div class="setting-header-text">
+              <span class="setting-label">Autoplay Similar Tracks</span>
+              <span class="setting-value">Keep playing instead of stopping at the end of the queue</span>
+            </div>
+            <input type="checkbox" class="pref-toggle" id="pref-autoplay" checked>
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3 class="settings-heading">Accessibility</h3>
+
+        <div class="setting-row">
+          <div class="toggle-row">
+            <div class="setting-header-text">
+              <span class="setting-label">Reduce Motion</span>
+              <span class="setting-value">Turns off the wave visualizer and slide/fade transitions</span>
+            </div>
+            <input type="checkbox" class="pref-toggle" id="pref-reduce-motion">
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="toggle-row">
+            <div class="setting-header-text">
+              <span class="setting-label">Haptic Feedback</span>
+              <span class="setting-value">A light vibration on taps — depends on your device</span>
+            </div>
+            <input type="checkbox" class="pref-toggle" id="pref-haptics">
+          </div>
+        </div>
+      </section>
+
+      <section class="settings-section">
+        <h3 class="settings-heading">About</h3>
+
+        <div class="setting-row">
+          <div class="static-row">
+            <span class="setting-label">Version</span>
+            <span class="setting-value">1.0.0</span>
+          </div>
+        </div>
+
+        <div class="setting-row">
+          <div class="static-row">
+            <span class="setting-label">Built by</span>
+            <span class="setting-value">CHIDA Communications</span>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <!-- ===== EQ SCREEN (reached only via "EQ" on the Now Playing screen —
+       not part of the bottom nav) ===== -->
+  <div id="screen-eq" class="screen">
+    <header class="eq-head">
+      <button id="eq-back" class="search-back" aria-label="Back">
+        <i class="fas fa-arrow-left"></i>
+      </button>
+      <h2 class="page-title">Equalizer</h2>
+    </header>
+
+    <main class="eq-body">
+      <div class="sonic-id-card">
+        <div class="sonic-id-top">
+          <div class="sonic-id-avatar-wrap">
+            <i class="far fa-circle-user sonic-id-avatar" id="sonic-id-avatar-icon"></i>
+            <img class="sonic-id-avatar-img" id="sonic-id-avatar-img" alt="Profile picture" style="display:none;">
+          </div>
+          <div class="sonic-id-info">
+            <p class="sonic-id-name" id="sonic-id-name">User</p>
+            <span class="sonic-id-badge">Synthwave Explorer</span>
+          </div>
+        </div>
+        <!-- Live now-playing visualizer, not a listening-history chart —
+             it pulses only while something is actually playing. -->
+        <div class="sonic-wave" id="sonic-wave" aria-hidden="true">
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+          <span></span><span></span><span></span><span></span><span></span><span></span>
+        </div>
+      </div>
+
+      <div class="eq-card">
+        <div class="eq-presets" id="eq-presets">
+          <button class="eq-preset-btn active" data-preset="flat">Flat</button>
+          <button class="eq-preset-btn" data-preset="bass">Bass Boost</button>
+          <button class="eq-preset-btn" data-preset="vocal">Vocal Accent</button>
+        </div>
+
+        <div class="eq-band" data-band="0">
+          <span class="eq-band-label">Bass</span>
+          <input type="range" class="eq-slider" min="-12" max="12" value="0" step="1">
+          <span class="eq-band-value">0dB</span>
+        </div>
+        <div class="eq-band" data-band="1">
+          <span class="eq-band-label">Low-Mid</span>
+          <input type="range" class="eq-slider" min="-12" max="12" value="0" step="1">
+          <span class="eq-band-value">0dB</span>
+        </div>
+        <div class="eq-band" data-band="2">
+          <span class="eq-band-label">Mid</span>
+          <input type="range" class="eq-slider" min="-12" max="12" value="0" step="1">
+          <span class="eq-band-value">0dB</span>
+        </div>
+        <div class="eq-band" data-band="3">
+          <span class="eq-band-label">High-Mid</span>
+          <input type="range" class="eq-slider" min="-12" max="12" value="0" step="1">
+          <span class="eq-band-value">0dB</span>
+        </div>
+        <div class="eq-band" data-band="4">
+          <span class="eq-band-label">Treble</span>
+          <input type="range" class="eq-slider" min="-12" max="12" value="0" step="1">
+          <span class="eq-band-value">0dB</span>
+        </div>
+
+        <p class="eq-note">Only affects imported audio — the 3 demo tracks are simulated and have no real sound to filter.</p>
+      </div>
+    </main>
+  </div>
+
+  <!-- ===== AUTH SCREEN (reached from Account & Sync — not part of the
+       bottom nav). Glassmorphic card floating over a photo backdrop;
+       everything inside the card is neumorphic against its own warm
+       near-black surface. ===== -->
+  <div id="screen-auth" class="screen auth-screen">
+    <div class="auth-bg" style="background-image:url('https://images.unsplash.com/photo-1766394609400-0e7b1548cd30?auto=format&fit=crop&w=1400&q=80')"></div>
+    <!-- Photo: Stephane Monnet, via Unsplash (unsplash.com/photos/465Ft460FV0) -->
+    <div class="auth-scrim"></div>
+
+    <button id="auth-back" class="auth-back-btn" aria-label="Back">
+      <i class="fas fa-arrow-left"></i>
+    </button>
+
+    <main class="auth-center">
+      <div class="auth-glass-card">
+        <div class="auth-brand">
+          <span class="auth-brand-mark">SONIQ</span>
+        </div>
+
+        <h2 class="auth-heading" id="auth-heading">Sign In</h2>
+
+        <div class="auth-field">
+          <div class="auth-neu-input">
+            <i class="fas fa-envelope"></i>
+            <input type="email" id="auth-email-input" placeholder="Email" aria-label="Email" autocomplete="email">
+          </div>
+        </div>
+
+        <div class="auth-field">
+          <div class="auth-neu-input">
+            <i class="fas fa-lock"></i>
+            <input type="password" id="auth-password-input" placeholder="Password" aria-label="Password" autocomplete="current-password">
+          </div>
+        </div>
+
+        <p class="auth-error hidden" id="auth-error"></p>
+
+        <button class="auth-submit-btn" id="auth-submit-btn" type="button">
+          <span id="auth-submit-label">Sign In</span>
+        </button>
+
+        <p class="auth-toggle-line">
+          <span id="auth-toggle-lead">Don't have an account?</span>
+          <span class="clear-link" id="auth-toggle-link">Sign up</span>
+        </p>
+      </div>
+    </main>
+  </div>
+
+  <audio id="audio-el" preload="metadata"></audio>
+
+  <!-- ===== NOW PLAYING (slide-up sheet) ===== -->
+  <div id="player-screen" class="player-screen">
+    <div class="player-drag-zone" id="player-drag-zone">
+      <div class="player-handle"></div>
+      <div class="player-top">
+        <button id="player-back" class="search-back" aria-label="Back">
+          <i class="fas fa-arrow-left"></i>
+        </button>
+        <span class="player-heading">Now Playing</span>
+        <div class="player-top-right">
+          <button id="player-eq-link" class="player-eq-link" type="button">EQ</button>
+          <i class="far fa-heart player-like" id="player-like"></i>
+        </div>
+      </div>
+    </div>
+
+    <div class="player-art-wrap">
+      <div class="player-glow" id="player-glow"></div>
+      <div class="player-art" id="player-art"></div>
+    </div>
+
+    <div class="player-meta">
+      <p class="player-artist" id="player-artist">Nova Ray</p>
+      <h3 class="player-title" id="player-title">Midnight Echoes</h3>
+    </div>
+
+    <div class="player-progress-wrap">
+      <div class="player-track" id="player-track">
+        <div class="player-fill" id="player-fill"></div>
+        <div class="player-thumb" id="player-thumb"></div>
+      </div>
+      <div class="player-time-row">
+        <span id="player-elapsed">0:00</span>
+        <span id="player-duration">0:00</span>
+      </div>
+    </div>
+
+    <div class="player-controls">
+      <button class="player-side-btn" id="player-prev"><i class="fas fa-backward"></i></button>
+      <button class="player-play-btn" id="player-playpause"><i class="fas fa-play"></i></button>
+      <button class="player-side-btn" id="player-next"><i class="fas fa-forward"></i></button>
+    </div>
+
+    <div class="player-next-up">
+      <span class="player-next-label">Next</span>
+      <p class="player-next-title" id="player-next-title">Solar Drift</p>
+      <span class="player-next-artist" id="player-next-artist">Kalene</span>
+    </div>
+  </div>
+
+  <!-- ===== MINI PLAYER (persists after minimizing Now Playing) =====
+       Vertical floating rail on the right edge — deliberately not on
+       the bottom edge so it never competes with the bottom nav. -->
+  <div id="mini-player" class="mini-player">
+    <button id="mini-close" class="mini-btn mini-close" aria-label="Close and stop">
+      <i class="hgi hgi-stroke hgi-rounded hgi-cancel-01"></i>
+    </button>
+
+    <div class="mini-art" id="mini-art"></div>
+
+    <button id="mini-next" class="mini-btn" aria-label="Next track">
+      <i class="fas fa-forward"></i>
+    </button>
+
+    <button id="mini-playpause" class="mini-btn mini-playpause" aria-label="Play or pause">
+      <i class="hgi hgi-stroke hgi-rounded hgi-play"></i>
+    </button>
+
+    <button id="mini-prev" class="mini-btn" aria-label="Previous track">
+      <i class="fas fa-backward"></i>
+    </button>
+
+    <button id="mini-like" class="mini-btn mini-like" aria-label="Favourite">
+      <i class="hgi hgi-stroke hgi-rounded hgi-favourite"></i>
+    </button>
+  </div>
+
+  <!-- Neumorphic Bottom Floating Navigation (always visible, sits above every screen) -->
+  <nav class="bottom-nav">
+    <a href="#" class="nav-item active" id="nav-home">
+<i class="hgi hgi-stroke hgi-rounded hgi-home-02"></i>
+      <span>Home</span>
+    </a>
+    <a href="#" class="nav-item" id="nav-search">
+<i class="hgi hgi-stroke hgi-rounded hgi-search-01"></i>
+      <span>Search</span>
+    </a>
+    <a href="#" class="nav-item" id="nav-library">
+<i class="hgi hgi-stroke hgi-rounded hgi-folder-music hg"></i>
+      <span>Library</span>
+    </a>
+    <a href="#" class="nav-item" id="nav-account">
+      <i class="hgi hgi-stroke hgi-rounded hgi-user"></i>
+      <span>Account</span>
+    </a>
+  </nav>
+
+  <script src="script.js"></script>
+</body>
+</html>
