@@ -1,0 +1,12 @@
+{
+  "name": "soniq-charts-sync",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Scheduled Netlify function: syncs a daily chart (Deezer, falling back to Jamendo) into SONIQ's Firestore project.",
+  "dependencies": {
+    "firebase-admin": "^13.10.0"
+  },
+  "devDependencies": {
+    "@netlify/functions": "^2.8.2"
+  }
+}
