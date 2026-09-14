@@ -1,0 +1,1904 @@
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  width: 100%;
+  min-height: 100vh;
+  background:#F9F9F8;
+}
+
+/* Header container splits left and right sections */
+.head {
+  padding: 10px 4px;
+  margin-top:30px;
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+}
+
+
+.eq-head {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px 4px;
+  margin-top: 30px;
+}
+
+/* Stacks the icon directly above the greeting */
+.user-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 6px;
+}
+
+.account-icon {
+  font-size: 48px;
+  color: var(--text-muted);
+}
+
+.home-avatar-wrap {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.home-avatar-img {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.greeting {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Places right-side icons in a straight horizontal line */
+.actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  font-size: 26px;
+}
+
+.actions i{
+  color: var(--text-muted);
+}
+/* Neumorphic Bottom Floating Navbar */
+.bottom-nav {
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  transition: transform 0.22s ease, opacity 0.22s ease, background-color 0.25s ease;
+  width: 90%;
+  max-width: 420px;
+  height: 65px;
+  background: var(--bg-primary);
+  display: flex;
+  justify-content: space-around;
+  align-items: center;
+  border-radius: 30px;
+  padding: 0 10px;
+  /* Soft Neumorphic dual shadows matching the current theme's surface */
+  box-shadow: 6px 6px 14px var(--shadow-dark), 
+             -6px -6px 14px var(--shadow-light);
+  z-index: 1000;
+}
+
+/* Hidden on the search screen — most-used pattern per research, and it
+   sidesteps the whole keyboard-vs-nav conflict since there's no nav
+   present to reposition while the keyboard is up. */
+.bottom-nav.nav-hidden {
+  transform: translateX(-50%) translateY(140%);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+  color: var(--text-secondary);
+  gap: 4px;
+  transition: all 0.2s ease;
+}
+
+.nav-item i {
+  font-size: 24px;
+}
+
+.nav-item span {
+  font-size: 11px;
+  font-weight: 500;
+  font-family: sans-serif;
+}
+
+/* Active item highlight */
+.nav-item.active,
+.nav-item:hover {
+  color: var(--accent-color);
+}
+
+/* ===== Home content ===== */
+.home {
+  padding: 20px 16px 110px;
+}
+
+/* Filter pills */
+.pill-row {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  scrollbar-width: none;
+}
+
+.pill-row::-webkit-scrollbar {
+  display: none;
+}
+
+.pill {
+  flex: 0 0 auto;
+  border: none;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 18px;
+  border-radius: 20px;
+  box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  transition: all 0.2s ease;
+}
+
+.pill.active {
+  background: var(--accent-color);
+  color: #ffffff;
+  box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+}
+
+/* Section title */
+.section-title {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 20px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 26px 0 14px;
+}
+
+/* Section header row — title + "See all" */
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.section-header .section-title {
+  margin: 26px 0 0;
+  line-height: 1;
+}
+
+.see-all {
+  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-secondary);
+  line-height: 1;
+}
+
+/* Curated card row */
+.card-row {
+  display: flex;
+  gap: 14px;
+  overflow-x: auto;
+  scroll-snap-type: x proximity;
+  padding-bottom: 8px;
+  scrollbar-width: none;
+}
+
+.card-row::-webkit-scrollbar {
+  display: none;
+}
+
+.feature-card {
+  position: relative;
+  overflow: hidden;
+  flex: 0 0 auto;
+  width: clamp(280px, 86vw, 420px);
+  height: 260px;
+  scroll-snap-align: start;
+  border-radius: 22px;
+  background: var(--card-bg);
+  box-shadow: 6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light);
+}
+
+/* Full-cover photo */
+.card-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+/*
+  5 blur layers stacked. Each one has a stronger blur than the last, and its
+  mask starts lower with a long soft fade — so blur creeps in almost
+  imperceptibly from mid-card, growing denser toward the bottom where the
+  text sits.
+*/
+.blur-1 {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 36%, rgba(0,0,0,0.5) 56%, black 68%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 36%, rgba(0,0,0,0.5) 56%, black 68%);
+}
+.blur-2 {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(5px);
+  -webkit-backdrop-filter: blur(5px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 45%, rgba(0,0,0,0.5) 62%, black 74%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 45%, rgba(0,0,0,0.5) 62%, black 74%);
+}
+.blur-3 {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 54%, rgba(0,0,0,0.5) 68%, black 80%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 54%, rgba(0,0,0,0.5) 68%, black 80%);
+}
+.blur-4 {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 62%, rgba(0,0,0,0.5) 75%, black 87%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 62%, rgba(0,0,0,0.5) 75%, black 87%);
+}
+.blur-5 {
+  position: absolute; inset: 0;
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  -webkit-mask-image: linear-gradient(to bottom, transparent 0%, transparent 70%, rgba(0,0,0,0.6) 83%, black 100%);
+  mask-image: linear-gradient(to bottom, transparent 0%, transparent 70%, rgba(0,0,0,0.6) 83%, black 100%);
+}
+
+/* Dark tint overlay — only for text legibility, no blur */
+.card-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to bottom, transparent 40%, rgba(8,8,8,0.18) 55%, rgba(8,8,8,0.56) 75%, rgba(8,8,8,0.76) 100%);
+  pointer-events: none;
+}
+
+.card-content {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  padding: 0 18px 18px;
+}
+
+.card-content h4 {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 18px;
+  color: #ffffff;
+  margin-bottom: 5px;
+}
+
+.card-content p {
+  font-family: sans-serif;
+  font-size: 12.5px;
+  color: rgba(255,255,255,0.72);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.card-actions {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: #ffffff;
+  font-size: 15px;
+}
+
+.play-btn {
+  width: 38px;
+  height: 38px;
+  border: none;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.18);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255,255,255,0.28);
+  color: #ffffff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.card-heart {
+  transition: color 0.15s ease;
+}
+
+.card-heart.liked {
+  color: var(--accent-color);
+}
+
+.card-download {
+  transition: color 0.15s ease;
+}
+
+.card-download.saved {
+  color: var(--accent-color);
+}
+
+.card-download.pulse {
+  animation: cardDownloadPulse 0.42s ease;
+}
+
+@keyframes cardDownloadPulse {
+  0% { transform: scale(1) translateY(0); }
+  35% { transform: scale(1.35) translateY(3px); }
+  65% { transform: scale(0.9) translateY(-1px); }
+  100% { transform: scale(1) translateY(0); }
+}
+
+/* ===== Screen system (Home / Search / Library) ===== */
+.hidden {
+  display: none !important;
+}
+
+.screen {
+  display: none;
+}
+
+.screen.active {
+  display: block;
+  animation: screenFadeIn 0.2s ease;
+}
+
+@keyframes screenFadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.search-screen {
+  padding: 0 16px 40px;
+}
+
+.search-top {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 30px;
+}
+
+.search-back {
+  flex: 0 0 auto;
+  width: 40px;
+  height: 40px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 14px;
+  box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.search-bar {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--bg-primary);
+  border-radius: 16px;
+  padding: 12px 14px;
+  box-shadow: inset 4px 4px 10px var(--shadow-dark), inset -4px -4px 10px var(--shadow-light);
+}
+
+.search-bar-icon {
+  color: var(--text-secondary);
+  font-size: 14px;
+}
+
+.search-input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-family: sans-serif;
+  font-size: 14.5px;
+  color: var(--text-primary);
+}
+
+.search-clear {
+  color: var(--text-muted);
+  font-size: 14px;
+  display: none;
+}
+
+.search-clear.shown {
+  display: block;
+}
+
+/* Default state: recent + trending */
+.search-default {
+  display: flex;
+  flex-direction: column;
+  gap: 26px;
+  margin-top: 28px;
+}
+
+.search-block-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+}
+
+.search-block-header h4 {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1;
+}
+
+.clear-link {
+  font-family: sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #FF4D00;
+  line-height: 1;
+}
+
+.chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-top: 12px;
+}
+
+.chip {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  background: var(--bg-primary);
+  padding: 9px 14px;
+  border-radius: 16px;
+  box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  font-family: sans-serif;
+  font-size: 12.5px;
+  color: var(--text-primary);
+}
+
+.trending-chip i {
+  color: var(--accent-color);
+  font-size: 11px;
+}
+
+.chip-remove {
+  color: var(--text-muted);
+  font-size: 10.5px;
+}
+
+/* Live results */
+.search-results {
+  margin-top: 8px;
+  display: flex;
+  flex-direction: column;
+}
+
+.result-group-label {
+  font-family: sans-serif;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #a8a8a8;
+  margin: 18px 0 8px;
+}
+
+.result-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 8px 4px;
+  border-radius: 14px;
+}
+
+.result-icon {
+  flex: 0 0 auto;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--card-bg);
+  box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #FF4D00;
+  font-size: 14px;
+}
+
+.result-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.result-title {
+  font-family: sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.result-title .hl {
+  color: #FF4D00;
+}
+
+.result-sub {
+  display: block;
+  font-family: sans-serif;
+  font-size: 11.5px;
+  color: #8a8a8a;
+  margin-top: 2px;
+}
+
+.result-fill {
+  flex: 0 0 auto;
+  color: #c7c7c7;
+  font-size: 13px;
+  transform: rotate(45deg);
+}
+
+.no-results {
+  margin-top: 40px;
+  text-align: center;
+  font-family: sans-serif;
+  font-size: 13px;
+  color: #9a9a9a;
+}
+
+/* ===== Library Screen ===== */
+.page-title {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.library {
+  padding: 10px 16px 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.library-cards {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.lib-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 10px;
+  border-radius: 18px;
+  background: var(--card-bg);
+  box-shadow: 5px 5px 12px var(--shadow-dark), -5px -5px 12px var(--shadow-light);
+}
+
+.lib-thumb {
+  flex: 0 0 auto;
+  width: 54px;
+  height: 54px;
+  border-radius: 12px;
+  background-size: cover;
+  background-position: center;
+}
+
+.lib-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.lib-title {
+  font-family: sans-serif;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.lib-artist {
+  font-family: sans-serif;
+  font-size: 12px;
+  color: var(--text-secondary);
+  margin-top: 3px;
+}
+
+.lib-actions {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  font-size: 16px;
+  color: #b5b5b5;
+}
+
+.lib-play {
+  width: 32px;
+  height: 32px;
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.65);
+  border-radius: 50%;
+  background: transparent;
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  box-shadow: 3px 3px 8px rgba(212, 212, 211, 0.7), -2px -2px 6px rgba(255, 255, 255, 0.8);
+  color: #FF4D00;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.lib-heart {
+  transition: color 0.15s ease;
+}
+
+.lib-heart.liked {
+  color: #FF4D00;
+}
+
+.lib-check {
+  color: #8a8a8a;
+  font-size: 13px;
+}
+
+/* ===== Now Playing (player sheet) ===== */
+.player-screen {
+  position: fixed;
+  inset: 0;
+  z-index: 3000;
+  background: var(--bg-primary);
+  display: flex;
+  flex-direction: column;
+  padding: 22px 22px 40px;
+  overflow-y: auto;
+  transform: translateY(100%);
+  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1), background-color 0.25s ease;
+}
+
+.player-screen.open {
+  transform: translateY(0);
+}
+
+.player-handle {
+  width: 40px;
+  height: 4px;
+  border-radius: 4px;
+  background: rgba(0, 0, 0, 0.15);
+  margin: 2px auto 12px;
+}
+
+.player-screen.dragging {
+  transition: none !important;
+}
+
+.player-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.player-heading {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.player-top-right {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.player-eq-link {
+  border: none;
+  background: transparent;
+  font-family: sans-serif;
+  font-size: 12.5px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  color: var(--text-secondary);
+  padding: 0;
+}
+
+.player-like {
+  font-size: 19px;
+  color: var(--text-muted);
+  transition: color 0.15s ease;
+}
+
+.player-like.liked {
+  color: var(--accent-color);
+}
+
+/* Album art with soft ambient glow behind it */
+.player-art-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 40px 0 30px;
+}
+
+.player-glow {
+  position: absolute;
+  inset: -26px;
+  background-size: cover;
+  background-position: center;
+  filter: blur(38px) saturate(1.5);
+  opacity: 0.5;
+  border-radius: 40px;
+  z-index: 0;
+}
+
+.player-art {
+  position: relative;
+  z-index: 1;
+  width: 74%;
+  max-width: 290px;
+  aspect-ratio: 1 / 1;
+  border-radius: 26px;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 10px 10px 22px var(--shadow-dark), -8px -8px 20px var(--shadow-light);
+}
+
+.player-meta {
+  text-align: center;
+  margin-bottom: 32px;
+}
+
+.player-artist {
+  font-family: sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  letter-spacing: 0.07em;
+  text-transform: uppercase;
+  color: var(--text-secondary);
+  margin-bottom: 6px;
+}
+
+.player-title {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+/* Progress */
+.player-progress-wrap {
+  margin: 0 2px 8px;
+}
+
+.player-track {
+  position: relative;
+  height: 6px;
+  border-radius: 6px;
+  background: var(--bg-primary);
+  box-shadow: inset 3px 3px 6px var(--shadow-dark), inset -3px -3px 6px var(--shadow-light);
+}
+
+.player-fill {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 0%;
+  background: var(--accent-color);
+  border-radius: 6px;
+}
+
+.player-thumb {
+  position: absolute;
+  top: 50%;
+  left: 0%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  box-shadow: 0 0 0 5px rgba(255, 77, 0, 0.16);
+  transform: translate(-50%, -50%);
+}
+
+.player-time-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 10px;
+  font-family: sans-serif;
+  font-size: 11px;
+  color: var(--text-secondary);
+}
+
+/* Transport controls */
+.player-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 26px;
+  margin: 14px 0 34px;
+}
+
+.player-side-btn {
+  width: 52px;
+  height: 52px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  box-shadow: 5px 5px 12px var(--shadow-dark), -5px -5px 12px var(--shadow-light);
+  color: var(--text-primary);
+  font-size: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.player-play-btn {
+  width: 70px;
+  height: 70px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-color);
+  box-shadow: 6px 6px 16px rgba(255, 77, 0, 0.35), -4px -4px 10px var(--shadow-light);
+  color: #ffffff;
+  font-size: 21px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Next up */
+.player-next-up {
+  text-align: center;
+  margin-top: auto;
+  padding-top: 10px;
+}
+
+.player-next-label {
+  font-family: sans-serif;
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--text-muted);
+}
+
+.player-next-title {
+  font-family: sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin-top: 4px;
+}
+
+.player-next-artist {
+  font-family: sans-serif;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.player-art.local-placeholder {
+  background: linear-gradient(150deg, #FFD8C2 0%, #FF7A45 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 46px;
+}
+
+/* ===== Account Screen ===== */
+.account {
+  padding: 16px 16px 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 34px;
+}
+
+.account-profile {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+.account-avatar-wrap {
+  position: relative;
+  width: 78px;
+  height: 78px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.account-avatar-icon {
+  font-size: 64px;
+  color: var(--text-muted);
+}
+
+.account-avatar-img {
+  width: 78px;
+  height: 78px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+}
+
+.avatar-edit-btn {
+  position: absolute;
+  bottom: -2px;
+  right: -2px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: #ffffff;
+  font-size: 11px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 2px 2px 6px var(--shadow-dark);
+}
+
+.avatar-upload-status {
+  font-family: sans-serif;
+  font-size: 11.5px;
+  color: var(--text-muted);
+  text-align: center;
+  margin: -4px 0 0;
+}
+
+.account-name-display-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.account-name {
+  font-family: sans-serif;
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.name-edit-btn {
+  border: none;
+  background: transparent;
+  color: var(--text-muted);
+  font-size: 12px;
+  padding: 4px;
+}
+
+.account-name-edit-row {
+  display: none;
+  align-items: center;
+  gap: 8px;
+  width: 100%;
+  max-width: 240px;
+}
+
+.account-name-edit-row.shown {
+  display: flex;
+}
+
+.account-name-edit-row .search-bar {
+  padding: 8px 14px;
+}
+
+.name-save-btn {
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border: none;
+  border-radius: 50%;
+  background: var(--accent-color);
+  color: #ffffff;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 3px 3px 8px var(--shadow-dark);
+}
+
+.eq-body {
+  padding: 6px 16px 110px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+
+.settings-section {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.settings-heading {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.setting-row {
+  border-radius: 18px;
+  background: var(--card-bg);
+  box-shadow: 5px 5px 12px var(--shadow-dark), -5px -5px 12px var(--shadow-light);
+  overflow: hidden;
+}
+
+.setting-header, .static-row, .toggle-row {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  text-align: left;
+}
+
+.setting-header {
+  border: none;
+  background: transparent;
+}
+
+.static-row, .toggle-row {
+  border: none;
+  background: transparent;
+}
+
+.setting-header-text {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.setting-label {
+  font-family: sans-serif;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.setting-value {
+  font-family: sans-serif;
+  font-size: 11.5px;
+  color: var(--text-secondary);
+}
+
+.setting-chevron {
+  color: var(--text-muted);
+  font-size: 13px;
+  transition: transform 0.2s ease;
+}
+
+.setting-row.open .setting-chevron {
+  transform: rotate(180deg);
+}
+
+/* Accordion body — collapsed by default via max-height.
+   .accordion-body is the generic name; .theme-options is kept as an
+   alias so the existing App Theme markup doesn't need to change. */
+.theme-options, .accordion-body {
+  max-height: 0;
+  overflow: hidden;
+  padding: 0 16px;
+  transition: max-height 0.25s ease, padding 0.25s ease;
+}
+
+.setting-row.open .theme-options, .setting-row.open .accordion-body {
+  max-height: 320px;
+  padding: 0 16px 14px;
+}
+
+/* A row inside an accordion body — .pref-row is the generic alias,
+   used for any label+control pairing, not just theme options. */
+.theme-option-row, .pref-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 0;
+  border-top: 1px solid rgba(127, 127, 127, 0.15);
+}
+
+.theme-option-row:first-child, .pref-row:first-child {
+  border-top: none;
+}
+
+.theme-option-label, .pref-row-label {
+  font-family: sans-serif;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+/* Real <input type="checkbox"> styled as a switch — kept as an actual
+   native input (not a label-wrapped hidden checkbox) since label-click
+   forwarding fails in Phoenix/Acode. The input itself is the tap target.
+   .theme-toggle's radio-group behavior (unchecking siblings) is specific
+   to its own change handler — .pref-toggle shares the same look but is
+   a plain independent on/off switch with no such coupling. */
+.theme-toggle, .pref-toggle {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 44px;
+  height: 26px;
+  flex-shrink: 0;
+  border: none;
+  border-radius: 20px;
+  background: var(--shadow-dark);
+  position: relative;
+  outline: none;
+  transition: background 0.2s ease;
+}
+
+.theme-toggle::before, .pref-toggle::before {
+  content: '';
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease;
+}
+
+.theme-toggle:checked, .pref-toggle:checked {
+  background: var(--accent-color);
+}
+
+.theme-toggle:checked::before, .pref-toggle:checked::before {
+  transform: translateX(18px);
+}
+
+/* ===== Mini Player ===== */
+/* Vertical floating rail, right edge, vertically centered — a different
+   axis entirely from the bottom nav (bottom-center, horizontal), so the
+   two can never collide or compete for space. */
+.mini-player {
+  position: fixed;
+  top: 50%;
+  right: 14px;
+  width: 136px;
+  z-index: 1500;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 0 18px;
+  background: var(--bg-primary);
+  border-radius: 44px;
+  box-shadow: 6px 6px 16px var(--shadow-dark), -6px -6px 16px var(--shadow-light);
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(-50%) translateX(160%);
+  transition: transform 0.32s cubic-bezier(0.22, 0.61, 0.36, 1), opacity 0.3s ease, background-color 0.25s ease;
+}
+
+.mini-player.visible {
+  opacity: 1;
+  pointer-events: auto;
+  transform: translateY(-50%) translateX(0);
+}
+
+.mini-btn {
+  flex: 0 0 auto;
+  width: 44px;
+  height: 44px;
+  border: none;
+  border-radius: 50%;
+  background: var(--bg-primary);
+  color: var(--text-primary);
+  font-size: 16px;
+  box-shadow: 4px 4px 10px var(--shadow-dark), -4px -4px 10px var(--shadow-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.mini-close {
+  width: 32px;
+  height: 32px;
+  font-size: 12px;
+  color: var(--text-muted);
+  box-shadow: 3px 3px 8px var(--shadow-dark), -3px -3px 8px var(--shadow-light);
+}
+
+.mini-art {
+  flex: 0 0 auto;
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background-size: cover;
+  background-position: center;
+  box-shadow: 4px 4px 12px var(--shadow-dark), -4px -4px 12px var(--shadow-light);
+}
+
+.mini-art.local-placeholder {
+  background: linear-gradient(150deg, #FFD8C2 0%, #FF7A45 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  font-size: 34px;
+}
+
+.mini-playpause {
+  width: 54px;
+  height: 54px;
+  background: #FF4D00;
+  color: #ffffff;
+  font-size: 18px;
+  box-shadow: 5px 5px 14px rgba(255, 77, 0, 0.35), -3px -3px 10px var(--shadow-light);
+}
+
+.mini-like.liked {
+  color: #FF4D00;
+}
+
+/* ===== Theme Engine =====
+   Three real themes, swapped via a data-theme attribute on <body>.
+   This covers the app's primary chrome (backgrounds, nav, cards, text,
+   accent) thoroughly. Per-content visuals tied to actual photos — the
+   curated cards' album art, blur glow, gradient overlays — intentionally
+   stay as-is, the same way Spotify doesn't re-tint your album art when
+   you flip system dark mode; only the app's own surfaces re-theme. */
+:root {
+  color-scheme: light;
+  --bg-primary: #F9F9F8;
+  --card-bg: #F9F9F8;
+  --text-primary: #1a1a1a;
+  --text-secondary: #8a8a8a;
+  --text-muted: #b5b5b5;
+  --accent-color: #FF4D00;
+  --shadow-light: #ffffff;
+  --shadow-dark: #d4d4d3;
+}
+
+body[data-theme="oled-dark"] {
+  color-scheme: dark;
+  --bg-primary: #000000;
+  --card-bg: #0d0d0d;
+  --text-primary: #f2f2f2;
+  --text-secondary: #9a9a9a;
+  --text-muted: #6a6a6a;
+  --accent-color: #FF4D00;
+  --shadow-light: #1c1c1c;
+  --shadow-dark: #000000;
+}
+
+body[data-theme="soniq-orange"] {
+  color-scheme: light;
+  --bg-primary: #FFF3EC;
+  --card-bg: #FFF3EC;
+  --text-primary: #331a0d;
+  --text-secondary: #a56b4a;
+  --text-muted: #c99a7c;
+  --accent-color: #FF4D00;
+  --shadow-light: #ffffff;
+  --shadow-dark: #f0c9ae;
+}
+
+/* Not a full WCAG-audited mode — a deliberately blunt, high-contrast
+   palette for anyone who finds the soft neumorphic shadows hard to read. */
+body[data-theme="high-contrast"] {
+  color-scheme: light;
+  --bg-primary: #ffffff;
+  --card-bg: #ffffff;
+  --text-primary: #000000;
+  --text-secondary: #1a1a1a;
+  --text-muted: #333333;
+  --accent-color: #CC3D00;
+  --shadow-light: #ffffff;
+  --shadow-dark: #949494;
+}
+
+/* Reduce Motion (Accessibility) — shortens or removes the app's few
+   real animated transitions. Doesn't touch layout, just motion. */
+body.reduce-motion .sonic-wave span {
+  animation: none !important;
+}
+
+body.reduce-motion .player-screen {
+  transition: none !important;
+}
+
+body.reduce-motion .mini-player {
+  transition: transform 0s, opacity 0.15s ease !important;
+}
+
+body.reduce-motion .setting-row .theme-options,
+body.reduce-motion .setting-row .accordion-body {
+  transition: none !important;
+}
+
+body.reduce-motion .eq-preset-btn {
+  transition: none !important;
+}
+
+body.reduce-motion .card-download.pulse {
+  animation: none !important;
+}
+
+body {
+  background: var(--bg-primary);
+  transition: background-color 0.25s ease;
+}
+
+/* ===== Sonic ID hero card ===== */
+.sonic-id-card {
+  background: var(--card-bg);
+  border-radius: 24px;
+  padding: 20px;
+  box-shadow: 6px 6px 14px var(--shadow-dark), -6px -6px 14px var(--shadow-light);
+}
+
+.sonic-id-top {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.sonic-id-avatar-wrap {
+  width: 54px;
+  height: 54px;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sonic-id-avatar {
+  font-size: 54px;
+  color: var(--text-muted);
+}
+
+.sonic-id-avatar-img {
+  width: 54px;
+  height: 54px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.sonic-id-info {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.sonic-id-name {
+  font-family: sans-serif;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.sonic-id-badge {
+  align-self: flex-start;
+  font-family: sans-serif;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #ffffff;
+  background: var(--accent-color);
+  padding: 4px 10px;
+  border-radius: 10px;
+}
+
+/* Live now-playing visualizer — still while nothing plays, pulses while it does */
+.sonic-wave {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 4px;
+  height: 40px;
+  margin-top: 18px;
+}
+
+.sonic-wave span {
+  flex: 1;
+  background: var(--accent-color);
+  border-radius: 3px;
+  height: 20%;
+  opacity: 0.35;
+  transition: opacity 0.3s ease;
+}
+
+.sonic-wave.active span {
+  opacity: 1;
+  animation: sonicWaveBounce 1.1s ease-in-out infinite;
+}
+
+.sonic-wave span:nth-child(1) { animation-delay: 0s; }
+.sonic-wave span:nth-child(2) { animation-delay: 0.08s; }
+.sonic-wave span:nth-child(3) { animation-delay: 0.16s; }
+.sonic-wave span:nth-child(4) { animation-delay: 0.24s; }
+.sonic-wave span:nth-child(5) { animation-delay: 0.32s; }
+.sonic-wave span:nth-child(6) { animation-delay: 0.4s; }
+.sonic-wave span:nth-child(7) { animation-delay: 0.32s; }
+.sonic-wave span:nth-child(8) { animation-delay: 0.24s; }
+.sonic-wave span:nth-child(9) { animation-delay: 0.16s; }
+.sonic-wave span:nth-child(10) { animation-delay: 0.08s; }
+.sonic-wave span:nth-child(11) { animation-delay: 0.04s; }
+.sonic-wave span:nth-child(12) { animation-delay: 0s; }
+
+@keyframes sonicWaveBounce {
+  0%, 100% { height: 20%; }
+  50% { height: 100%; }
+}
+
+/* ===== Equalizer ===== */
+.eq-card {
+  background: var(--card-bg);
+  border-radius: 20px;
+  padding: 18px;
+  box-shadow: 5px 5px 12px var(--shadow-dark), -5px -5px 12px var(--shadow-light);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.eq-presets {
+  display: flex;
+  gap: 10px;
+}
+
+.eq-preset-btn {
+  flex: 1;
+  border: none;
+  background: var(--bg-primary);
+  color: var(--text-secondary);
+  font-family: sans-serif;
+  font-size: 11.5px;
+  font-weight: 600;
+  padding: 9px 6px;
+  border-radius: 14px;
+  box-shadow: 3px 3px 8px var(--shadow-dark), -3px -3px 8px var(--shadow-light);
+  transition: transform 0.1s ease;
+}
+
+.eq-preset-btn:active {
+  transform: scale(0.95);
+}
+
+.eq-preset-btn.active {
+  background: var(--accent-color);
+  color: #ffffff;
+}
+
+.eq-band, .slider-row {
+  display: grid;
+  grid-template-columns: 58px 1fr 34px;
+  align-items: center;
+  gap: 10px;
+}
+
+.eq-band-label {
+  font-family: sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.eq-band-value {
+  font-family: sans-serif;
+  font-size: 11px;
+  color: var(--text-secondary);
+  text-align: right;
+}
+
+/* Custom range slider, matching the app's accent */
+.eq-slider {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 4px;
+  border-radius: 4px;
+  background: var(--shadow-dark);
+  outline: none;
+}
+
+.eq-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--accent-color);
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.25);
+  transition: transform 0.1s ease;
+}
+
+.eq-slider::-webkit-slider-thumb:active {
+  transform: scale(1.15);
+}
+
+.eq-slider:disabled {
+  opacity: 0.4;
+}
+
+.eq-note, .note-text {
+  font-family: sans-serif;
+  font-size: 11px;
+  color: var(--text-muted);
+  line-height: 1.4;
+  margin-top: 4px;
+}
+
+.genre-chip-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  padding: 4px 0 12px;
+}
+
+/* ===== Onboarding overlay ===== 
+   Full-screen, first-run only (soniq_onboarding_complete flag). Three
+   photo-backed steps stacked in the same spot; only the one with
+   .active shows. Own onboard-* namespace throughout — see script.js
+   for why this stays separate from the real .genre-chip wiring. */
+.onboarding-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 9999;
+  background: #000000;
+}
+
+.onboarding-overlay.dismissed {
+  display: none;
+}
+
+.onboard-step {
+  position: absolute;
+  inset: 0;
+  display: none;
+  flex-direction: column;
+  justify-content: flex-end;
+}
+
+.onboard-step.active {
+  display: flex;
+}
+
+.onboard-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.onboard-scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(0, 0, 0, 0.15) 0%, rgba(0, 0, 0, 0.55) 55%, rgba(0, 0, 0, 0.92) 100%);
+}
+
+.onboard-content {
+  position: relative;
+  z-index: 1;
+  padding: 0 24px calc(48px + env(safe-area-inset-bottom, 0px));
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.onboard-eyebrow {
+  font-family: sans-serif;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #FF8A4D;
+}
+
+.onboard-heading {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  color: #ffffff;
+  line-height: 1.25;
+  margin: 0;
+}
+
+.onboard-subtext {
+  font-family: sans-serif;
+  font-size: 13.5px;
+  color: rgba(255, 255, 255, 0.75);
+  line-height: 1.5;
+  margin: -6px 0 0;
+}
+
+.onboard-input-wrap {
+  margin-top: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  box-shadow: none;
+  border: 1px solid rgba(255, 255, 255, 0.25);
+}
+
+.onboard-input-wrap .search-input {
+  color: #ffffff;
+  background: transparent;
+}
+
+.onboard-input-wrap .search-input::placeholder {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.onboard-genre-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.onboard-genre-chip {
+  flex: 0 0 auto;
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  font-family: sans-serif;
+  font-size: 13px;
+  font-weight: 600;
+  padding: 10px 16px;
+  border-radius: 20px;
+  transition: all 0.2s ease;
+}
+
+.onboard-genre-chip.active {
+  background: #FF4D00;
+  border-color: #FF4D00;
+  color: #ffffff;
+}
+
+.onboard-btn {
+  margin-top: 10px;
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  background: #FF4D00;
+  color: #ffffff;
+  font-family: sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  padding: 16px;
+  box-shadow: 0 8px 20px rgba(255, 77, 0, 0.35);
+}
+
+/* ===== Auth screen (Sign In / Create Account) =====
+   A photo backdrop with a dark vignette (the "barrier layer" — dense
+   enough that the card's text stays legible regardless of what's
+   happening in the image behind it), a glass card floating center-
+   screen, and neumorphic interior elements sitting on their own warm
+   near-black surface so the dual-shadow illusion actually reads
+   against something consistent — glass alone can't carry that trick.
+*/
+.auth-screen {
+  position: relative;
+  min-height: 100vh;
+  min-height: 100dvh;
+  overflow: hidden;
+  --auth-surface: #1c1613;
+  --auth-surface-light: rgba(255, 255, 255, 0.06);
+  --auth-surface-dark: rgba(0, 0, 0, 0.6);
+  --auth-text: #f5efe9;
+  --auth-text-muted: rgba(245, 239, 233, 0.55);
+}
+
+.auth-bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+}
+
+.auth-scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(120% 90% at 50% 38%, rgba(10, 6, 4, 0.55) 0%, rgba(8, 5, 4, 0.86) 60%, rgba(6, 4, 3, 0.96) 100%),
+    linear-gradient(180deg, rgba(0, 0, 0, 0.5) 0%, rgba(0, 0, 0, 0.25) 30%, rgba(0, 0, 0, 0.55) 100%);
+}
+
+.auth-back-btn {
+  position: absolute;
+  z-index: 2;
+  top: calc(30px + env(safe-area-inset-top, 0px));
+  left: 20px;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 50%;
+  background: none;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  color: #ffffff;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 4px 4px 10px rgba(0, 0, 0, 0.35);
+}
+
+.auth-center {
+  position: relative;
+  z-index: 1;
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 90px 22px 40px;
+}
+
+.auth-glass-card {
+  width: 100%;
+  max-width: 360px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 34px 26px 30px;
+  border-radius: 28px;
+  background: linear-gradient(165deg, rgba(255, 255, 255, 0.12), rgba(255, 255, 255, 0.04));
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  backdrop-filter: blur(26px) saturate(160%);
+  -webkit-backdrop-filter: blur(26px) saturate(160%);
+  box-shadow:
+    0 24px 60px rgba(0, 0, 0, 0.5),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.auth-brand {
+  text-align: center;
+}
+
+.auth-brand-mark {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--accent-color);
+  text-shadow: 0 0 18px rgba(255, 77, 0, 0.55);
+}
+
+.auth-heading {
+  font-family: 'Medusa Gothic', 'Andika', sans-serif;
+  font-size: 22px;
+  font-weight: 600;
+  color: var(--auth-text);
+  text-align: center;
+  margin-top: -4px;
+}
+
+.auth-field {
+  display: flex;
+  flex-direction: column;
+}
+
+.auth-neu-input {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 15px 18px;
+  border-radius: 16px;
+  background: var(--auth-surface);
+  box-shadow:
+    inset 4px 4px 8px var(--auth-surface-dark),
+    inset -4px -4px 8px var(--auth-surface-light);
+}
+
+.auth-neu-input i {
+  width: 16px;
+  text-align: center;
+  font-size: 14px;
+  color: var(--accent-color);
+  flex-shrink: 0;
+}
+
+.auth-neu-input input {
+  flex: 1;
+  min-width: 0;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-family: sans-serif;
+  font-size: 14px;
+  color: var(--auth-text);
+}
+
+.auth-neu-input input::placeholder {
+  color: var(--auth-text-muted);
+}
+
+.auth-error {
+  font-family: sans-serif;
+  font-size: 12px;
+  font-weight: 600;
+  color: #ff8a7a;
+  line-height: 1.4;
+  margin: -6px 0 0;
+}
+
+.auth-submit-btn {
+  width: 100%;
+  border: none;
+  border-radius: 16px;
+  margin-top: 4px;
+  padding: 16px;
+  background: linear-gradient(150deg, #ff6a2b 0%, #e64000 100%);
+  color: #ffffff;
+  font-family: sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  box-shadow:
+    6px 6px 14px var(--auth-surface-dark),
+    -4px -4px 10px rgba(255, 255, 255, 0.05),
+    0 10px 24px rgba(255, 77, 0, 0.4);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.auth-submit-btn:active {
+  transform: scale(0.97);
+  box-shadow:
+    2px 2px 6px var(--auth-surface-dark),
+    -2px -2px 6px rgba(255, 255, 255, 0.04),
+    0 4px 12px rgba(255, 77, 0, 0.35);
+}
+
+.auth-submit-btn:disabled {
+  opacity: 0.6;
+}
+
+.auth-toggle-line {
+  text-align: center;
+  font-family: sans-serif;
+  font-size: 12.5px;
+  color: var(--auth-text-muted);
+}
+
+.auth-toggle-line .clear-link {
+  margin-left: 4px;
+  color: var(--accent-color);
+}
