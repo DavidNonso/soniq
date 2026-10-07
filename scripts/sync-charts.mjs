@@ -91,11 +91,13 @@ async function main() {
     throw new Error('Missing one or more required Firebase secrets (check repo Settings -> Secrets and variables -> Actions)');
   }
 
-  initializeApp({
+  const app = initializeApp({
     credential: cert({ projectId, clientEmail, privateKey }),
   });
 
-  const db = getFirestore();
+  // This project's database has the literal ID 'default' (no parentheses),
+  // not the SDK's usual '(default)' -- so it has to be named explicitly.
+  const db = getFirestore(app, 'default');
   await db.collection('charts').doc('daily').set({
     tracks,
     source,
