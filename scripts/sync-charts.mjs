@@ -152,7 +152,7 @@ async function deriveNewReleases(chartTracks) {
     }
   }
   const dated = [];
-  for (const albumId of Array.from(byAlbum.keys()).slice(0, 120)) {
+  for (const albumId of Array.from(byAlbum.keys()).slice(0, 150)) {
     try {
       const album = await getJson(DEEZER + '/album/' + albumId);
       if (album.release_date) {
@@ -239,8 +239,15 @@ async function buildFeeds() {
     if (tracks) feeds.trending = { source: 'jamendo', fetchedAt: stamp(), tracks };
   }
 
-  // newReleases: newest albums across both global lists
-  const chartPool = [].concat(globalRaw || [], worldwideRaw || []);
+  // newReleases: newest albums across the global charts, plus Deezer's
+  // Radar Weekly editor playlist -- chart toppers skew old, so Radar is what
+  // keeps this feed genuinely fresh. Radar goes first so it always makes the
+  // album-lookup cut.
+  const radarRaw = await attempt('Deezer Radar Weekly', async () => {
+    const json = await getJson(DEEZER + '/playlist/' + CURATED[0].playlistId + '/tracks?limit=100');
+    return usableDeezer(json.data);
+  });
+  const chartPool = [].concat(radarRaw || [], globalRaw || [], worldwideRaw || []);
   let newTracks = null;
   let newSource = 'deezer';
   if (chartPool.length > 0) {
