@@ -6,11 +6,13 @@
 // failed feed is simply left out of the write, so its last good copy stays
 // in Firestore instead of being overwritten with nothing.
 //
-//   trending     global top tracks            (Deezer -> Jamendo)
-//   topCharts    Deezer's "Top Nigeria" chart (Deezer -> Jamendo)
-//   newReleases  newest albums found across the charts, by real release
-//                date (Deezer -> Jamendo newest tracks)
-//   playlists    Deezer chart playlists       (Deezer only)
+//   topCharts    Deezer's official "Top Worldwide" chart   (Deezer -> Jamendo)
+//   trending     global chart tracks NOT already in Top Charts, so the two
+//                sections never repeat each other           (Deezer -> Jamendo)
+//   newReleases  newest albums found across the global charts, by real
+//                release date                               (Deezer -> Jamendo)
+//   playlists    Deezer chart playlists                     (Deezer only)
+//   curated      two editor playlists behind the Home cards (Deezer -> Jamendo)
 //
 // SONIQ never calls these APIs for the lists -- it only reads the cached doc.
 // Deezer preview links are signed and expire after ~15 minutes, so the app
@@ -24,6 +26,14 @@ const JAMENDO = 'https://api.jamendo.com/v3.0';
 const FEED_SIZE = 20;
 const NEW_RELEASE_WINDOW_DAYS = 90;
 const MIN_NEW_RELEASES = 6;
+const TOP_WORLDWIDE_ID = 3155776842; // Deezer Charts' official daily global chart
+
+// The Home screen's two feature cards. Each plays a Deezer *editor* playlist
+// (stable ids, with a title search as a backstop); Jamendo covers an outage.
+const CURATED = [
+  { key: 'discover', playlistId: 1282495565, search: 'Radar Weekly', jamendo: { order: 'popularity_total', offset: '40' } },
+  { key: 'focus', playlistId: 8749345882, search: 'study lofi', jamendo: { tags: 'ambient', order: 'popularity_total' } },
+];
 
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -93,15 +103,43 @@ async function jamendoTracks(params) {
 
 /* ---------- Deezer sources ---------- */
 
-async function fetchNigeriaChart() {
-  const search = await getJson(DEEZER + '/search/playlist?q=' + encodeURIComponent('Top Nigeria') + '&limit=10');
-  const exact = (search.data || []).filter((p) => /^top nigeria$/i.test((p.title || '').trim()));
+async function fetchTopWorldwide() {
+  try {
+    const direct = await getJson(DEEZER + '/playlist/' + TOP_WORLDWIDE_ID + '/tracks?limit=100');
+    const tracks = usableDeezer(direct.data);
+    if (tracks.length >= FEED_SIZE) return tracks;
+  } catch (err) {
+    console.error('Top Worldwide by id failed, searching by title: ' + err.message);
+  }
+  const search = await getJson(DEEZER + '/search/playlist?q=' + encodeURIComponent('Top Worldwide') + '&limit=10');
+  const exact = (search.data || []).filter((p) => /^top worldwide$/i.test((p.title || '').trim()));
   const pick = exact.find((p) => p.user && /deezer/i.test(p.user.name || '')) || exact[0];
   if (!pick) {
-    throw new Error('No "Top Nigeria" playlist found');
+    throw new Error('No "Top Worldwide" playlist found');
   }
-  const tracks = await getJson(DEEZER + '/playlist/' + pick.id + '/tracks?limit=100');
-  return usableDeezer(tracks.data);
+  const found = await getJson(DEEZER + '/playlist/' + pick.id + '/tracks?limit=100');
+  return usableDeezer(found.data);
+}
+
+async function fetchCuratedDeezer(card) {
+  try {
+    const direct = await getJson(DEEZER + '/playlist/' + card.playlistId + '/tracks?limit=40');
+    const tracks = usableDeezer(direct.data);
+    if (tracks.length >= 10) return tracks.slice(0, 25).map(deezerTrack);
+  } catch (err) {
+    console.error('Curated ' + card.key + ' by id failed, searching by title: ' + err.message);
+  }
+  const search = await getJson(DEEZER + '/search/playlist?q=' + encodeURIComponent(card.search) + '&limit=10');
+  const pick = (search.data || []).find((p) => p.user && /deezer/i.test(p.user.name || '') && p.nb_tracks >= 20);
+  if (!pick) {
+    throw new Error('No Deezer editor playlist found for "' + card.search + '"');
+  }
+  const found = await getJson(DEEZER + '/playlist/' + pick.id + '/tracks?limit=40');
+  const tracks = usableDeezer(found.data);
+  if (tracks.length < 10) {
+    throw new Error('Too few playable tracks in "' + card.search + '"');
+  }
+  return tracks.slice(0, 25).map(deezerTrack);
 }
 
 async function deriveNewReleases(chartTracks) {
@@ -171,28 +209,38 @@ async function buildFeeds() {
     const json = await getJson(DEEZER + '/chart/0/tracks?limit=100');
     return usableDeezer(json.data);
   });
-  const nigeriaRaw = await attempt('Deezer Top Nigeria', fetchNigeriaChart);
+  const worldwideRaw = await attempt('Deezer Top Worldwide', fetchTopWorldwide);
 
-  // trending
-  if (globalRaw && globalRaw.length >= FEED_SIZE) {
-    feeds.trending = { source: 'deezer', fetchedAt: stamp(), tracks: globalRaw.slice(0, FEED_SIZE).map(deezerTrack) };
+  // topCharts: the official worldwide chart; if that playlist is unavailable,
+  // the chart API's own top 20 (still Deezer); then Jamendo.
+  let topChartTracks = null;
+  if (worldwideRaw && worldwideRaw.length >= FEED_SIZE) {
+    topChartTracks = worldwideRaw.slice(0, FEED_SIZE);
+  } else if (globalRaw && globalRaw.length >= FEED_SIZE) {
+    topChartTracks = globalRaw.slice(0, FEED_SIZE);
+  }
+  if (topChartTracks) {
+    feeds.topCharts = { source: 'deezer', region: 'Global', fetchedAt: stamp(), tracks: topChartTracks.map(deezerTrack) };
   } else {
-    const tracks = await attempt('Jamendo trending', () => jamendoTracks({ order: 'popularity_total' }));
+    const tracks = await attempt('Jamendo charts', () => jamendoTracks({ order: 'popularity_total' }));
+    if (tracks) feeds.topCharts = { source: 'jamendo', region: 'Global', fetchedAt: stamp(), tracks };
+  }
+
+  // trending: global chart tracks that aren't already in Top Charts
+  const inTopCharts = new Set((topChartTracks || []).map((t) => String(t.id)));
+  const trendingPool = [globalRaw, worldwideRaw]
+    .filter((list) => list && list.length > 0)
+    .map((list) => list.filter((t) => !inTopCharts.has(String(t.id))))
+    .find((list) => list.length >= FEED_SIZE);
+  if (trendingPool) {
+    feeds.trending = { source: 'deezer', fetchedAt: stamp(), tracks: trendingPool.slice(0, FEED_SIZE).map(deezerTrack) };
+  } else {
+    const tracks = await attempt('Jamendo trending', () => jamendoTracks({ order: 'popularity_total', offset: String(FEED_SIZE) }));
     if (tracks) feeds.trending = { source: 'jamendo', fetchedAt: stamp(), tracks };
   }
 
-  // topCharts (Nigeria)
-  if (nigeriaRaw && nigeriaRaw.length >= FEED_SIZE) {
-    feeds.topCharts = { source: 'deezer', region: 'Nigeria', fetchedAt: stamp(), tracks: nigeriaRaw.slice(0, FEED_SIZE).map(deezerTrack) };
-  } else {
-    const tracks =
-      (await attempt('Jamendo afrobeat charts', () => jamendoTracks({ tags: 'afrobeat', order: 'popularity_total' }))) ||
-      (await attempt('Jamendo charts', () => jamendoTracks({ order: 'popularity_total', offset: String(FEED_SIZE) })));
-    if (tracks) feeds.topCharts = { source: 'jamendo', region: 'Nigeria', fetchedAt: stamp(), tracks };
-  }
-
-  // newReleases
-  const chartPool = [].concat(nigeriaRaw || [], globalRaw || []);
+  // newReleases: newest albums across both global lists
+  const chartPool = [].concat(globalRaw || [], worldwideRaw || []);
   let newTracks = null;
   let newSource = 'deezer';
   if (chartPool.length > 0) {
@@ -208,6 +256,19 @@ async function buildFeeds() {
   const items = await attempt('Deezer playlists', fetchPlaylists);
   if (items) feeds.playlists = { source: 'deezer', fetchedAt: stamp(), items };
 
+  // curated: each feature card is its own independent feed
+  const curated = {};
+  for (const card of CURATED) {
+    let tracks = await attempt('Curated ' + card.key + ' (Deezer)', () => fetchCuratedDeezer(card));
+    let source = 'deezer';
+    if (!tracks) {
+      tracks = await attempt('Curated ' + card.key + ' (Jamendo)', () => jamendoTracks(card.jamendo));
+      source = 'jamendo';
+    }
+    if (tracks) curated[card.key] = { source, fetchedAt: stamp(), tracks };
+  }
+  if (Object.keys(curated).length > 0) feeds.curated = curated;
+
   return feeds;
 }
 
@@ -217,7 +278,13 @@ async function main() {
 
   for (const name of names) {
     const f = feeds[name];
-    console.log('Feed ' + name + ': ' + f.source + ' (' + (f.tracks || f.items).length + ' items)');
+    if (name === 'curated') {
+      for (const key of Object.keys(f)) {
+        console.log('Feed curated.' + key + ': ' + f[key].source + ' (' + f[key].tracks.length + ' items)');
+      }
+    } else {
+      console.log('Feed ' + name + ': ' + f.source + ' (' + (f.tracks || f.items).length + ' items)');
+    }
   }
   if (names.length === 0) {
     throw new Error('Every feed failed -- leaving the existing cache untouched');
