@@ -142,21 +142,33 @@ async function fetchCuratedDeezer(card) {
   return tracks.slice(0, 25).map(deezerTrack);
 }
 
-async function deriveNewReleases(chartTracks) {
+async function deriveNewReleases(radarTracks, chartTracks) {
   // One representative track per album, then look up each album's real
-  // release date and keep the genuinely recent ones, newest first.
+  // release date and keep the genuinely recent ones. Albums that are ALSO on
+  // the global charts (known hits) get up to half the slots; Radar Weekly's
+  // fresh picks fill the rest -- otherwise Radar's whole "new music Friday"
+  // batch would crowd out everything recognisable.
   const byAlbum = new Map();
-  for (const t of chartTracks) {
-    if (t.album && t.album.id && !byAlbum.has(t.album.id)) {
-      byAlbum.set(t.album.id, t);
+  const add = (list, chart) => {
+    for (const t of list) {
+      if (!(t.album && t.album.id)) continue;
+      const existing = byAlbum.get(t.album.id);
+      if (existing) {
+        if (chart) existing.chart = true;
+      } else {
+        byAlbum.set(t.album.id, { track: t, chart });
+      }
     }
-  }
+  };
+  add(radarTracks, false);
+  add(chartTracks, true);
+
   const dated = [];
-  for (const albumId of Array.from(byAlbum.keys()).slice(0, 150)) {
+  for (const [albumId, entry] of Array.from(byAlbum.entries()).slice(0, 200)) {
     try {
       const album = await getJson(DEEZER + '/album/' + albumId);
       if (album.release_date) {
-        dated.push({ date: album.release_date, track: byAlbum.get(albumId) });
+        dated.push({ date: album.release_date, track: entry.track, chart: entry.chart });
       }
     } catch (err) {
       // one bad album lookup shouldn't sink the feed
@@ -164,13 +176,18 @@ async function deriveNewReleases(chartTracks) {
     await sleep(100); // stay well inside Deezer's rate limit
   }
   const cutoff = new Date(Date.now() - NEW_RELEASE_WINDOW_DAYS * 86400000).toISOString().slice(0, 10);
-  const recent = dated
-    .filter((x) => x.date >= cutoff)
-    .sort((a, b) => (a.date < b.date ? 1 : -1));
+  const newestFirst = (a, b) => (a.date < b.date ? 1 : -1);
+  const recent = dated.filter((x) => x.date >= cutoff);
   if (recent.length < MIN_NEW_RELEASES) {
     throw new Error('Only ' + recent.length + ' recent albums found (need ' + MIN_NEW_RELEASES + ')');
   }
-  return recent.slice(0, FEED_SIZE).map((x) => ({ ...deezerTrack(x.track), releaseDate: x.date }));
+  const hits = recent.filter((x) => x.chart).sort(newestFirst).slice(0, FEED_SIZE / 2);
+  const rest = recent.filter((x) => !hits.includes(x)).sort(newestFirst);
+  return hits
+    .concat(rest)
+    .slice(0, FEED_SIZE)
+    .sort(newestFirst)
+    .map((x) => ({ ...deezerTrack(x.track), releaseDate: x.date }));
 }
 
 async function fetchPlaylists() {
@@ -247,11 +264,11 @@ async function buildFeeds() {
     const json = await getJson(DEEZER + '/playlist/' + CURATED[0].playlistId + '/tracks?limit=100');
     return usableDeezer(json.data);
   });
-  const chartPool = [].concat(radarRaw || [], globalRaw || [], worldwideRaw || []);
+  const chartPool = [].concat(globalRaw || [], worldwideRaw || []);
   let newTracks = null;
   let newSource = 'deezer';
-  if (chartPool.length > 0) {
-    newTracks = await attempt('Deezer new releases', () => deriveNewReleases(chartPool));
+  if (chartPool.length > 0 || (radarRaw && radarRaw.length > 0)) {
+    newTracks = await attempt('Deezer new releases', () => deriveNewReleases(radarRaw || [], chartPool));
   }
   if (!newTracks) {
     newTracks = await attempt('Jamendo new releases', () => jamendoTracks({ order: 'releasedate_desc' }));
