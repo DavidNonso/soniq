@@ -177,7 +177,18 @@ async function deriveNewReleases(radarTracks, chartTracks) {
   }
   const cutoff = new Date(Date.now() - NEW_RELEASE_WINDOW_DAYS * 86400000).toISOString().slice(0, 10);
   const newestFirst = (a, b) => (a.date < b.date ? 1 : -1);
-  const recent = dated.filter((x) => x.date >= cutoff);
+  // the same song often shows up as both a single and an album -- keep the
+  // newest copy only
+  const seen = new Set();
+  const recent = dated
+    .filter((x) => x.date >= cutoff)
+    .sort(newestFirst)
+    .filter((x) => {
+      const key = (x.track.title + '|' + ((x.track.artist && x.track.artist.name) || '')).toLowerCase();
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   if (recent.length < MIN_NEW_RELEASES) {
     throw new Error('Only ' + recent.length + ' recent albums found (need ' + MIN_NEW_RELEASES + ')');
   }
